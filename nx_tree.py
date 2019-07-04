@@ -1,5 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import random
 
 
 # Draw the networkx graph g
@@ -32,3 +33,33 @@ def to_directed_tree_recur(di_g, node):
         for child in children:
             di_g.remove_edge(child, node)
             to_directed_tree_recur(di_g, child)
+
+
+# Generate a random cyber-security model on n vertices
+# aka a rooted tree with random edge and vertex labels (costs and prizes)
+def random_csm(n):
+    tree = random_rooted_tree(n)
+    # Label non-root vertices with prizes as the attribute 'p'
+    prize_mapping = dict(zip(range(1, n), random_c_or_p(n)))
+    for k, p in prize_mapping.items():
+        tree.nodes[k]["p"] = p
+    # Label edges with costs as the attribute 'c'
+    cost_mapping = dict(zip(tree.edges, random_c_or_p(n)))
+    for (inv, outv), c in cost_mapping.items():
+        tree[inv][outv]["c"] = c
+    return tree
+
+
+# Generate a random tree cyber-security model on n vertices
+# with 0 prize/cost for every vertex/edge
+def zero_csm(n):
+    tree = random_rooted_tree(n)
+    for k in range(1, n):
+        tree.nodes[k]["p"] = 0
+    for inv, outv in tree.edges:
+        tree[inv][outv]["c"] = 0
+    return tree
+
+
+def random_c_or_p(n):
+    return [random.randint(1, 10) for i in range(n)]

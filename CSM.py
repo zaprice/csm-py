@@ -10,11 +10,20 @@ class CSM:
         self.children: Dict["CSM", int] = dict()
 
         # If given a networkx digraph, import children from there
+        # Expects costs as "c" attribute on edges
+        # And prizes as "p" attribute on vertices
         if nx_tree is not None:
             self.children = dict(
                 zip(
-                    [CSM(nx_tree=nx_tree, nx_node=child) for child in nx_tree[nx_node]],
-                    [0 for child in nx_tree[nx_node]],
+                    [
+                        CSM(
+                            prize=nx_tree.nodes[child]["p"],
+                            nx_tree=nx_tree,
+                            nx_node=child,
+                        )
+                        for child in nx_tree[nx_node]
+                    ],
+                    [nx_tree[nx_node][child]["c"] for child in nx_tree[nx_node]],
                 )
             )
 
