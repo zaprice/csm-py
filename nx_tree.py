@@ -30,13 +30,42 @@ def draw_csm(root: CSM):
 
 # Generate a random rooted tree on n vertices
 # as a networkx digraph
-def random_rooted_tree(n):
+def random_rooted_tree(n, mine=True):
     # Node 0 is the root
-    # Graph starts out with all bidirectional edges
-    di_g = nx.random_tree(n).to_directed()
-    # Remove edges pointing towards the root
-    to_directed_tree(di_g)
+    if mine:
+        # Tends to produce a wider, shorter tree
+        di_g = my_random_rooted_tree(n)
+    else:
+        # Tends to produce a taller, skinnier tree
+        # Graph starts out with all bidirectional edges
+        di_g = nx.random_tree(n).to_directed()
+        # Remove edges pointing towards the root
+        to_directed_tree(di_g)
     return di_g
+
+
+def my_random_rooted_tree(n):
+    g = nx.DiGraph()
+    # Node 0 is the root
+    nodes = range(n)
+    for i in nodes:
+        g.add_node(i)
+
+    remaining_edges = n - 1
+    # For each node, roll for # of children
+    for i in nodes:
+        if remaining_edges > 0:
+            if remaining_edges == 1:
+                n_children = 1
+            else:
+                n_children = random.randint(1, remaining_edges)
+            # Connect those children and move to the next node
+            for k in range(n - remaining_edges, n - remaining_edges + n_children):
+                g.add_edge(i, k)
+            remaining_edges -= n_children
+        else:
+            return g
+    return g
 
 
 # Convert di_g to a directed rooted tree
@@ -55,8 +84,8 @@ def to_directed_tree_recur(di_g, node):
 
 # Generate a random cyber-security model on n vertices
 # aka a rooted tree with random edge and vertex labels (costs and prizes)
-def random_csm(n):
-    tree = random_rooted_tree(n)
+def random_csm(n, mine=True):
+    tree = random_rooted_tree(n, mine)
     # Label non-root vertices with prizes as the attribute 'p'
     prize_mapping = dict(zip(range(1, n), random_c_or_p(n)))
     for k, p in prize_mapping.items():
@@ -70,8 +99,8 @@ def random_csm(n):
 
 # Generate a random tree cyber-security model on n vertices
 # with 0 prize/cost for every vertex/edge
-def zero_csm(n):
-    tree = random_rooted_tree(n)
+def zero_csm(n, mine=True):
+    tree = random_rooted_tree(n, mine)
     for k in range(1, n):
         tree.nodes[k]["p"] = 0
     for inv, outv in tree.edges:

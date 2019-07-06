@@ -53,19 +53,19 @@ class TestCSM(unittest.TestCase):
 
     def testInitZero(self):
         for n in range(1, 50):
-            tree = zero_csm(n)
+            tree = zero_csm(n, mine=False)
             self.num_children(tree, 0, CSM(nx_tree=tree))
 
     def testInitRandom(self):
         for n in range(1, 50):
-            tree = random_csm(n)
+            tree = random_csm(n, mine=False)
             self.num_children(tree, 0, CSM(nx_tree=tree))
             self.check_costs(tree, 0, None, CSM(nx_tree=tree))
             self.check_prizes(tree, 0, CSM(nx_tree=tree))
 
     def testMaxPrize(self):
         for n in range(1, 30):
-            c = CSM(nx_tree=random_csm(n))
+            c = CSM(nx_tree=random_csm(n, mine=False))
             ppb = c.max_prize_per_budget(all_subtrees(c))
             self.assertEqual(ppb, max_prize_per_budget(c))
             # Prizes must be increasing
