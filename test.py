@@ -66,7 +66,7 @@ class TestCSM(unittest.TestCase):
     def testMaxPrize(self):
         for n in range(1, 30):
             c = CSM(nx_tree=random_csm(n))
-            ppb = c.max_prize_per_budget()
+            ppb = c.max_prize_per_budget(all_subtrees(c))
             self.assertEqual(ppb, max_prize_per_budget(c))
             # Prizes must be increasing
             self.assertTrue(

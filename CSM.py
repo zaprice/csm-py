@@ -1,6 +1,5 @@
 from typing import List
 from itertools import product, permutations
-from copy import deepcopy
 
 from lib import pairwise
 
@@ -32,8 +31,7 @@ class CSM:
         return [self] + sum([child.all_nodes() for child in self.children], [])
 
     # Return the largest prize attainable at each budget
-    def max_prize_per_budget(self) -> List[int]:
-        subtrees = all_subtrees(self)
+    def max_prize_per_budget(self, subtrees) -> List[int]:
         costs = subtree_costs(subtrees)
         prizes = subtree_prizes(subtrees)
         return prize_per_cost(costs, prizes)
@@ -77,6 +75,7 @@ def all_combos(
 # Returns total cost of taking subtree, for all subtrees
 def subtree_costs(subtrees: List[List[CSM]]) -> List[int]:
     return [sum([node.cost for node in subtree]) for subtree in subtrees]
+    # return map(lambda subtree: sum([node.cost for node in subtree]), subtrees)
 
 
 # Returns total prize in subtree, for all subtrees
@@ -85,7 +84,7 @@ def subtree_prizes(subtrees: List[List[CSM]]) -> List[int]:
 
 
 # Given costs, prizes for same subtrees,
-# gives best prize for every budegt up to max_cost
+# gives best prize for every budget up to max_cost
 def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
     # Sort pairs so we only have to loop once
     # Faster to sort in-place
@@ -115,10 +114,11 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
 
 
 # Get all possible (size n-1) cost and prize labelings of the (size n) input tree
+# Given that they are processed one at a time, we don't need to copy
 def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
+    nodes = root.all_nodes()
     for cs, ps in product(permutations(costs), permutations(prizes)):
-        nodes = deepcopy(root).all_nodes()
         for i in range(len(ps)):
             nodes[i + 1].prize = ps[i]
             nodes[i + 1].cost = cs[i]
-        yield nodes[0]
+        yield root
