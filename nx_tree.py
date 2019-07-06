@@ -2,6 +2,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import random
 
+# Set same seed for testing
+random.seed(1)
+
 
 # Draw the networkx graph g
 # Only works in ipython

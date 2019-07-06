@@ -3,9 +3,11 @@ from itertools import product
 
 
 class CSM:
-    def __init__(self, prize=0, nx_tree=None, nx_node=0):
+    def __init__(self, prize=0, cost=0, nx_tree=None, nx_node=0):
         # Prize for taking this node
         self.prize = prize
+        # Cost to take this node
+        self.cost = cost
         # children is a mapping from child nodes to their edge costs
         self.children: Dict["CSM", int] = dict()
 
@@ -18,6 +20,7 @@ class CSM:
                     [
                         CSM(
                             prize=nx_tree.nodes[child]["p"],
+                            cost=nx_tree[nx_node][child]["c"],
                             nx_tree=nx_tree,
                             nx_node=child,
                         )
@@ -30,6 +33,13 @@ class CSM:
     # Get only child nodes, not edge weights
     def get_children(self) -> List["CSM"]:
         return list(self.children.keys())
+
+    # Return the largest prize attainable at each budget
+    def max_prize_per_budget(self):
+        subtrees = all_subtrees(self)
+        costs = [subtree_cost(tree) for tree in subtrees]
+        prizes = [subtree_prize(tree) for tree in subtrees]
+        return prize_per_cost(costs, prizes)
 
 
 # Get all subtrees of the rooted tree "root"
@@ -75,3 +85,42 @@ def all_combos(
         [root] + sum(some_subtrees, [])
         for some_subtrees in product(*tree_dict.values())
     ]
+
+
+# Returns total cost of taking this subtree
+def subtree_cost(subtree: List[CSM]) -> int:
+    return sum([node.cost for node in subtree])
+
+
+# Returns total prize for this subtree
+def subtree_prize(subtree: List[CSM]) -> int:
+    return sum([node.prize for node in subtree])
+
+
+# Given costs, prizes for same subtrees,
+# gives best prize for every budegt up to max_cost
+def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
+    # Sort pairs so we only have to loop once
+    cost_prize_sort = sorted(list(zip(costs, prizes)), key=lambda pair: pair[0])
+    unique_costs = list(sorted(set(costs)))
+
+    # List will be of length max_cost, and will contain the
+    # largest prize attainable at that cost
+    max_list = []
+    i = 0
+    curr_max_prize = -1
+    # For each unique cost, find the maximum prize
+    # Max for everything up to that cost, as curr_max_prize is not reset in the loop
+    for j in range(len(unique_costs) - 1):
+        cost = unique_costs[j]
+        # Loop until observed cost is greater than current cost
+        # We can do this because they are sorted
+        # If so, compare to max and continue
+        while cost_prize_sort[i][0] <= cost:
+            curr_max_prize = max(curr_max_prize, cost_prize_sort[i][1])
+            i += 1
+        # Add prize to list for each budget between this one and the next
+        max_list.extend([curr_max_prize] * (unique_costs[j + 1] - cost))
+    # Append final prize
+    max_list.append(cost_prize_sort[-1][1])
+    return max_list
