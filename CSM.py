@@ -1,5 +1,7 @@
 from typing import Dict, List
-from itertools import product
+from itertools import product, permutations
+from copy import deepcopy
+from lib import pairwise
 
 
 class CSM:
@@ -8,34 +10,28 @@ class CSM:
         self.prize = prize
         # Cost to take this node
         self.cost = cost
-        # children is a mapping from child nodes to their edge costs
-        self.children: Dict["CSM", int] = dict()
+        self.children: List["CSM"] = []
 
         # If given a networkx digraph, import children from there
         # Expects costs as "c" attribute on edges
         # And prizes as "p" attribute on vertices
         if nx_tree is not None:
-            self.children = dict(
-                zip(
-                    [
-                        CSM(
-                            prize=nx_tree.nodes[child]["p"],
-                            cost=nx_tree[nx_node][child]["c"],
-                            nx_tree=nx_tree,
-                            nx_node=child,
-                        )
-                        for child in nx_tree[nx_node]
-                    ],
-                    [nx_tree[nx_node][child]["c"] for child in nx_tree[nx_node]],
+            self.children = [
+                CSM(
+                    prize=nx_tree.nodes[child]["p"],
+                    cost=nx_tree[nx_node][child]["c"],
+                    nx_tree=nx_tree,
+                    nx_node=child,
                 )
-            )
+                for child in nx_tree[nx_node]
+            ]
 
-    # Get only child nodes, not edge weights
-    def get_children(self) -> List["CSM"]:
-        return list(self.children.keys())
+    # Get all nodes of the tree
+    def all_nodes(self) -> List["CSM"]:
+        return [self] + sum([child.all_nodes() for child in self.children], [])
 
     # Return the largest prize attainable at each budget
-    def max_prize_per_budget(self):
+    def max_prize_per_budget(self) -> List[int]:
         subtrees = all_subtrees(self)
         costs = [subtree_cost(tree) for tree in subtrees]
         prizes = [subtree_prize(tree) for tree in subtrees]
@@ -45,18 +41,18 @@ class CSM:
 # Get all subtrees of the rooted tree "root"
 def all_subtrees(root: CSM) -> List[List[CSM]]:
     # leaf
-    if len(root.get_children()) == 0:
+    if len(root.children) == 0:
         return [[root]]
     else:
         # All subtrees from all children
         # Each child gives a List[List[CSM]] of trees from its children
         # So we sum to flatten into List[List[CSM]]
         child_trees: List[List[CSM]] = sum(
-            [all_subtrees(child) for child in root.get_children()], []
+            [all_subtrees(child) for child in root.children], []
         )
         # Some subtrees are child trees + the root
         # Some are combinations of child trees + the root
-        return all_combos(root, root.get_children(), child_trees)
+        return all_combos(root, root.children, child_trees)
 
 
 # All possible combinations of root + some child trees are subtrees
@@ -102,7 +98,7 @@ def subtree_prize(subtree: List[CSM]) -> int:
 def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
     # Sort pairs so we only have to loop once
     cost_prize_sort = sorted(list(zip(costs, prizes)), key=lambda pair: pair[0])
-    unique_costs = list(sorted(set(costs)))
+    unique_costs = sorted(set(costs))
 
     # List will be of length max_cost, and will contain the
     # largest prize attainable at that cost
@@ -111,8 +107,7 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
     curr_max_prize = -1
     # For each unique cost, find the maximum prize
     # Max for everything up to that cost, as curr_max_prize is not reset in the loop
-    for j in range(len(unique_costs) - 1):
-        cost = unique_costs[j]
+    for (cost, next_cost) in pairwise(unique_costs):
         # Loop until observed cost is greater than current cost
         # We can do this because they are sorted
         # If so, compare to max and continue
@@ -120,7 +115,17 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
             curr_max_prize = max(curr_max_prize, cost_prize_sort[i][1])
             i += 1
         # Add prize to list for each budget between this one and the next
-        max_list.extend([curr_max_prize] * (unique_costs[j + 1] - cost))
+        max_list.extend([curr_max_prize] * (next_cost - cost))
     # Append final prize
     max_list.append(cost_prize_sort[-1][1])
     return max_list
+
+
+# Get all possible (size n-1) cost and prize labelings of the (size n) input tree
+def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
+    for cs, ps in product(permutations(costs), permutations(prizes)):
+        nodes = deepcopy(root).all_nodes()
+        for i in range(len(ps)):
+            nodes[i + 1].prize = ps[i]
+            nodes[i + 1].cost = cs[i]
+        yield nodes[0]
