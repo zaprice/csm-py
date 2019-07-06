@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Tuple
 from itertools import product, permutations
+from copy import deepcopy
 
 from lib import pairwise
 
@@ -119,6 +120,35 @@ def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
     nodes = root.all_nodes()
     for cs, ps in product(permutations(costs), permutations(prizes)):
         for i in range(len(ps)):
-            nodes[i + 1].prize = ps[i]
             nodes[i + 1].cost = cs[i]
-        yield root
+            nodes[i + 1].prize = ps[i]
+        yield (cs, ps)
+
+
+def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> CSM:
+    # Copy first so we don't alter the original
+    root = deepcopy(root)
+    # Can compute subtrees ahead of time, as they are lists of pointer to nodes
+    # The nodes get re-labeled every time in the following loop
+    subtrees = all_subtrees(root)
+
+    prize_budget_curve: List[List[int]] = []
+    labelings: List[Tuple[List[int], List[int]]] = []
+
+    for labeling in all_labelings(root, costs, prizes):
+        labelings.append(labeling)
+        prize_budget_curve.append(root.max_prize_per_budget(subtrees))
+
+    areas = [sum(prizes) for prizes in prize_budget_curve]
+    min_area = min(areas)
+    idx = areas.index(min_area)
+
+    apply_labeling(root, labelings[idx][0], labelings[idx][1])
+    return root
+
+
+def apply_labeling(root: CSM, costs: List[int], prizes: List[int]) -> None:
+    nodes = root.all_nodes()
+    for i in range(len(prizes)):
+        nodes[i + 1].cost = costs[i]
+        nodes[i + 1].prize = prizes[i]

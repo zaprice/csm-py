@@ -2,6 +2,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import random
 
+from CSM import CSM
+
 # Set same seed for testing
 random.seed(1)
 
@@ -11,6 +13,19 @@ random.seed(1)
 def draw(g):
     plt.subplot(121)
     nx.draw(g, with_labels=True, font_weight="bold")
+
+
+# Convert CSM back to networkx so we can draw it
+def draw_csm(root: CSM):
+    g = csm_2_nx(root)
+    node_labels = dict(
+        zip(range(len(root.all_nodes())), [node.prize for node in root.all_nodes()])
+    )
+
+    edge_labels = dict(zip(g.edges, [g[edge[0]][edge[1]]["c"] for edge in g.edges]))
+    layout = nx.shell_layout(g)
+    nx.draw(g, pos=layout, labels=node_labels, edge_labels=edge_labels)
+    nx.draw_networkx_edge_labels(g, layout, edge_labels=edge_labels)
 
 
 # Generate a random rooted tree on n vertices
@@ -66,3 +81,19 @@ def zero_csm(n):
 
 def random_c_or_p(n):
     return [random.randint(1, 10) for i in range(n)]
+
+
+def csm_2_nx(root: CSM):
+    nodes = root.all_nodes()
+    g = nx.DiGraph()
+
+    # Add nodes with prizes
+    for n in range(len(nodes)):
+        g.add_node(n)
+        g.nodes[n]["p"] = nodes[n].prize
+        # Add edges
+        for child in nodes[n].children:
+            child_idx = nodes.index(child)
+            g.add_edge(n, child_idx)
+            g[n][child_idx]["c"] = child.cost
+    return g
