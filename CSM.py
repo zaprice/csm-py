@@ -1,6 +1,7 @@
-from typing import Dict, List
+from typing import List
 from itertools import product, permutations
 from copy import deepcopy
+
 from lib import pairwise
 
 
@@ -33,8 +34,8 @@ class CSM:
     # Return the largest prize attainable at each budget
     def max_prize_per_budget(self) -> List[int]:
         subtrees = all_subtrees(self)
-        costs = [subtree_cost(tree) for tree in subtrees]
-        prizes = [subtree_prize(tree) for tree in subtrees]
+        costs = subtree_costs(subtrees)
+        prizes = subtree_prizes(subtrees)
         return prize_per_cost(costs, prizes)
 
 
@@ -64,40 +65,32 @@ def all_combos(
     # List of their trees for each child
     # Also want to include the empty subtree, as product does not need to pick
     # one from every child
-    # Could just be a List[List[List[CSM]]] but the Dict is easier to read
-    tree_dict: Dict[CSM, List[List[CSM]]] = dict(
-        zip(
-            children,
-            [
-                [tree for tree in child_trees if tree[0] == child] + [[]]
-                for child in children
-            ],
-        )
-    )
+    tree_list: List[List[List[CSM]]] = [
+        [tree for tree in child_trees if tree[0] == child] + [[]] for child in children
+    ]
 
     # Take product of these lists: one subtree from each child, including empty subtree
     # Concatenate a list of subtrees together with the root, to form a new tree
-    return [
-        [root] + sum(some_subtrees, [])
-        for some_subtrees in product(*tree_dict.values())
-    ]
+    return [[root] + sum(some_subtrees, []) for some_subtrees in product(*tree_list)]
 
 
-# Returns total cost of taking this subtree
-def subtree_cost(subtree: List[CSM]) -> int:
-    return sum([node.cost for node in subtree])
+# Returns total cost of taking subtree, for all subtrees
+def subtree_costs(subtrees: List[List[CSM]]) -> List[int]:
+    return [sum([node.cost for node in subtree]) for subtree in subtrees]
 
 
-# Returns total prize for this subtree
-def subtree_prize(subtree: List[CSM]) -> int:
-    return sum([node.prize for node in subtree])
+# Returns total prize in subtree, for all subtrees
+def subtree_prizes(subtrees: List[List[CSM]]) -> List[int]:
+    return [sum([node.prize for node in subtree]) for subtree in subtrees]
 
 
 # Given costs, prizes for same subtrees,
 # gives best prize for every budegt up to max_cost
 def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
     # Sort pairs so we only have to loop once
-    cost_prize_sort = sorted(list(zip(costs, prizes)), key=lambda pair: pair[0])
+    # Faster to sort in-place
+    cost_prize_sort = list(zip(costs, prizes))
+    cost_prize_sort.sort(key=lambda pair: pair[0])
     unique_costs = sorted(set(costs))
 
     # List will be of length max_cost, and will contain the

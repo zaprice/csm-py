@@ -2,7 +2,7 @@ import unittest
 from functools import reduce
 from math import factorial
 
-from CSM import CSM, all_subtrees, subtree_cost, subtree_prize, all_labelings
+from CSM import CSM, all_subtrees, subtree_costs, subtree_prizes, all_labelings
 from nx_tree import zero_csm, random_csm
 
 
@@ -10,8 +10,8 @@ from nx_tree import zero_csm, random_csm
 # Simpler version for testing against CSM.max_prize_per_budget
 def max_prize_per_budget(root):
     subtrees = all_subtrees(root)
-    costs = [subtree_cost(tree) for tree in subtrees]
-    prizes = [subtree_prize(tree) for tree in subtrees]
+    costs = subtree_costs(subtrees)
+    prizes = subtree_prizes(subtrees)
     max_budget = max(costs)
 
     cost_prize = list(zip(costs, prizes))
