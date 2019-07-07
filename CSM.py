@@ -119,9 +119,7 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
 def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
     nodes = root.all_nodes()
     for cs, ps in product(permutations(costs), permutations(prizes)):
-        for i in range(len(ps)):
-            nodes[i + 1].cost = cs[i]
-            nodes[i + 1].prize = ps[i]
+        apply_labeling(nodes, costs, prizes)
         yield (cs, ps)
 
 
@@ -143,12 +141,11 @@ def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> CSM:
     min_area = min(areas)
     idx = areas.index(min_area)
 
-    apply_labeling(root, labelings[idx][0], labelings[idx][1])
+    apply_labeling(root.all_nodes(), labelings[idx][0], labelings[idx][1])
     return root
 
 
-def apply_labeling(root: CSM, costs: List[int], prizes: List[int]) -> None:
-    nodes = root.all_nodes()
+def apply_labeling(nodes: List[CSM], costs: List[int], prizes: List[int]) -> None:
     for i in range(len(prizes)):
         nodes[i + 1].cost = costs[i]
         nodes[i + 1].prize = prizes[i]
