@@ -2,13 +2,22 @@ import unittest
 from functools import reduce
 from math import factorial
 
-from CSM import CSM, all_subtrees, subtree_costs, subtree_prizes, all_labelings
-from nx_tree import zero_csm, random_csm
+from CSM import (
+    CSM,
+    all_subtrees,
+    subtree_costs,
+    subtree_prizes,
+    all_labelings,
+    best_labeling,
+    max_prize_per_budget,
+    as_indices,
+)
+from nx_tree import zero_csm, random_csm, random_c_or_p
 
 
 # Return the largest prize attainable at each budget
 # Simpler version for testing against CSM.max_prize_per_budget
-def max_prize_per_budget(root):
+def max_prize_per_budget2(root):
     subtrees = all_subtrees(root)
     costs = subtree_costs(subtrees)
     prizes = subtree_prizes(subtrees)
@@ -64,10 +73,14 @@ class TestCSM(unittest.TestCase):
             self.check_prizes(tree, 0, CSM(nx_tree=tree))
 
     def testMaxPrize(self):
-        for n in range(1, 30):
+        for n in range(3, 30):
             c = CSM(nx_tree=random_csm(n, mine=False))
-            ppb = c.max_prize_per_budget(all_subtrees(c))
-            self.assertEqual(ppb, max_prize_per_budget(c))
+            costs = [node.cost for node in c.all_nodes()[1:]]
+            prizes = [node.prize for node in c.all_nodes()[1:]]
+            ppb = max_prize_per_budget(
+                as_indices(c.all_nodes(), all_subtrees(c)), costs, prizes
+            )
+            self.assertEqual(ppb, max_prize_per_budget2(c))
             # Prizes must be increasing
             self.assertTrue(
                 reduce(
@@ -79,7 +92,13 @@ class TestCSM(unittest.TestCase):
 
     def testLabelings(self):
         for n in range(1, 7):
-            c = CSM(nx_tree=random_csm(n))
             # Make sure there are the expected (n-1)!^2 labelings
-            n_labelings = sum(1 for l in all_labelings(c, [0] * (n - 1), [0] * (n - 1)))
+            n_labelings = sum(1 for l in all_labelings([0] * (n - 1), [0] * (n - 1)))
             self.assertEqual(n_labelings, factorial(n - 1) ** 2)
+
+    def testBestLabeling(self):
+        for n in range(2, 6):
+            c = CSM(nx_tree=zero_csm(n))
+            costs = random_c_or_p(n - 1)
+            prizes = random_c_or_p(n - 1)
+            best_c = best_labeling(c, costs, prizes)

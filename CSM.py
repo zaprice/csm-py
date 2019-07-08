@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from itertools import product, permutations
 from copy import deepcopy
 
@@ -30,12 +30,6 @@ class CSM:
     # Get all nodes of the tree
     def all_nodes(self) -> List["CSM"]:
         return [self] + sum([child.all_nodes() for child in self.children], [])
-
-    # Return the largest prize attainable at each budget
-    def max_prize_per_budget(self, subtrees) -> List[int]:
-        costs = subtree_costs(subtrees)
-        prizes = subtree_prizes(subtrees)
-        return prize_per_cost(costs, prizes)
 
 
 # Get all subtrees of the rooted tree "root"
@@ -84,6 +78,11 @@ def subtree_prizes(subtrees: List[List[CSM]]) -> List[int]:
     return [sum([node.prize for node in subtree]) for subtree in subtrees]
 
 
+# Returns total val (cost, prize) of subtree, for all subtrees
+def subtree_vals(subtrees: List[List[int]], vals: List[int]) -> List[int]:
+    return [sum([vals[i] for i in subtree]) for subtree in subtrees]
+
+
 # Given costs, prizes for same subtrees,
 # gives best prize for every budget up to max_cost
 def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
@@ -116,33 +115,42 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
 
 # Get all possible (size n-1) cost and prize labelings of the (size n) input tree
 # Given that they are processed one at a time, we don't need to copy
-def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
-    nodes = root.all_nodes()
-    for cs, ps in product(permutations(costs), permutations(prizes)):
-        apply_labeling(nodes, costs, prizes)
-        yield (cs, ps)
+def all_labelings(costs: List[int], prizes: List[int]):
+    return product(permutations(costs), permutations(prizes))
+
+
+# Return the largest prize attainable at each budget
+def max_prize_per_budget(
+    subtree_indices: List[List[int]], node_costs: List[int], node_prizes: List[int]
+) -> List[int]:
+    st_costs = subtree_vals(subtree_indices, node_costs)
+    st_prizes = subtree_vals(subtree_indices, node_prizes)
+    return prize_per_cost(st_costs, st_prizes)
 
 
 def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> CSM:
-    # Copy first so we don't alter the original
     root = deepcopy(root)
-    # Can compute subtrees ahead of time, as they are lists of pointer to nodes
-    # The nodes get re-labeled every time in the following loop
-    subtrees = all_subtrees(root)
+    # Convert subtrees list into indexes into nodes list
+    # Index is i-1 since we don't want to count the root
+    # as this will be used to index into length (n-1) cost/prize lists
+    subtree_indices: List[List[int]] = as_indices(root.all_nodes(), all_subtrees(root))
 
-    prize_budget_curve: List[List[int]] = []
-    labelings: List[Tuple[List[int], List[int]]] = []
+    best_prize_budget_curve: Union[float, int] = float("inf")
+    best_labeling: Tuple[List[int], List[int]] = ([], [])
 
-    for labeling in all_labelings(root, costs, prizes):
-        labelings.append(labeling)
-        prize_budget_curve.append(root.max_prize_per_budget(subtrees))
+    for labeling in all_labelings(costs, prizes):
+        pbc: int = sum(max_prize_per_budget(subtree_indices, labeling[0], labeling[1]))
+        if pbc < best_prize_budget_curve:
+            best_labeling = labeling
+            best_prize_budget_curve = pbc
 
-    areas = [sum(prizes) for prizes in prize_budget_curve]
-    min_area = min(areas)
-    idx = areas.index(min_area)
-
-    apply_labeling(root.all_nodes(), labelings[idx][0], labelings[idx][1])
+    apply_labeling(root.all_nodes(), best_labeling[0], best_labeling[1])
     return root
+
+
+def as_indices(nodes: List[CSM], subtrees: List[List[CSM]]) -> List[List[int]]:
+    # i-1 and tree[1:] to leave out root and re-index
+    return [[nodes.index(node) - 1 for node in tree[1:]] for tree in subtrees]
 
 
 def apply_labeling(nodes: List[CSM], costs: List[int], prizes: List[int]) -> None:
