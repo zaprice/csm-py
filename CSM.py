@@ -119,7 +119,7 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
 def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
     nodes = root.all_nodes()
     for cs, ps in product(permutations(costs), permutations(prizes)):
-        apply_labeling(nodes, costs, prizes)
+        apply_labeling(nodes, cs, ps)
         yield (cs, ps)
 
 
