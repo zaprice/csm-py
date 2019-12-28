@@ -19,8 +19,8 @@ class CSM:
         if nx_tree is not None:
             self.children = [
                 CSM(
-                    prize=nx_tree.nodes[child]["p"],
-                    cost=nx_tree[nx_node][child]["c"],
+                    prize=nx_tree.nodes[child].get("p"),
+                    cost=nx_tree[nx_node][child].get("c"),
                     nx_tree=nx_tree,
                     nx_node=child,
                 )
@@ -123,7 +123,7 @@ def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
         yield (cs, ps)
 
 
-def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> CSM:
+def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
     # Copy first so we don't alter the original
     root = deepcopy(root)
     # Can compute subtrees ahead of time, as they are lists of pointer to nodes
@@ -139,10 +139,18 @@ def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> CSM:
 
     areas = [sum(prizes) for prizes in prize_budget_curve]
     min_area = min(areas)
-    idx = areas.index(min_area)
+    idxs = [i for i, x in enumerate(areas) if x == min_area]
 
-    apply_labeling(root.all_nodes(), labelings[idx][0], labelings[idx][1])
-    return root
+    unique_labelings = list({labelings[i] for i in idxs})
+    graphs = [deepcopy(root) for i in unique_labelings]
+
+    [
+        apply_labeling(
+            graphs[i].all_nodes(), unique_labelings[i][0], unique_labelings[i][1]
+        )
+        for i in range(len(graphs))
+    ]
+    return graphs
 
 
 def apply_labeling(nodes: List[CSM], costs: List[int], prizes: List[int]) -> None:

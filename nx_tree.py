@@ -40,7 +40,7 @@ def random_rooted_tree(n, mine=True):
         # Graph starts out with all bidirectional edges
         di_g = nx.random_tree(n).to_directed()
         # Remove edges pointing towards the root
-        to_directed_tree(di_g)
+        di_g = to_directed_tree(di_g)
     return di_g
 
 
@@ -72,6 +72,7 @@ def my_random_rooted_tree(n):
 # by removing all edges pointing towards 0
 def to_directed_tree(di_g):
     to_directed_tree_recur(di_g, 0)
+    return di_g
 
 
 def to_directed_tree_recur(di_g, node):
