@@ -4,6 +4,11 @@ import random
 
 from CSM import CSM
 
+# For typing
+from typing import List
+from networkx.classes.digraph import DiGraph
+from networkx.classes.coreviews import AtlasView
+
 # Set same seed for testing
 random.seed(1)
 
@@ -30,7 +35,7 @@ def draw_csm(root: CSM):
 
 # Generate a random rooted tree on n vertices
 # as a networkx digraph
-def random_rooted_tree(n, mine=True):
+def random_rooted_tree(n: int, mine=True) -> DiGraph:
     # Node 0 is the root
     if mine:
         # Tends to produce a wider, shorter tree
@@ -44,7 +49,7 @@ def random_rooted_tree(n, mine=True):
     return di_g
 
 
-def my_random_rooted_tree(n):
+def my_random_rooted_tree(n: int) -> DiGraph:
     g = nx.DiGraph()
     # Node 0 is the root
     nodes = range(n)
@@ -70,13 +75,14 @@ def my_random_rooted_tree(n):
 
 # Convert di_g to a directed rooted tree
 # by removing all edges pointing towards 0
-def to_directed_tree(di_g):
+def to_directed_tree(di_g: DiGraph) -> DiGraph:
     to_directed_tree_recur(di_g, 0)
     return di_g
 
 
-def to_directed_tree_recur(di_g, node):
-    children = di_g[node]
+# node is the current node index in the di_g DiGraph structure
+def to_directed_tree_recur(di_g: DiGraph, node: int) -> None:
+    children: AtlasView = di_g[node]
     if len(children) != 0:
         for child in children:
             di_g.remove_edge(child, node)
@@ -85,7 +91,7 @@ def to_directed_tree_recur(di_g, node):
 
 # Generate a random cyber-security model on n vertices
 # aka a rooted tree with random edge and vertex labels (costs and prizes)
-def random_csm(n, mine=True):
+def random_csm(n: int, mine=True) -> DiGraph:
     tree = random_rooted_tree(n, mine)
     # Label non-root vertices with prizes as the attribute 'p'
     prize_mapping = dict(zip(range(1, n), random_c_or_p(n)))
@@ -100,7 +106,7 @@ def random_csm(n, mine=True):
 
 # Generate a random tree cyber-security model on n vertices
 # with 0 prize/cost for every vertex/edge
-def zero_csm(n, mine=True):
+def zero_csm(n: int, mine=True) -> DiGraph:
     tree = random_rooted_tree(n, mine)
     for k in range(1, n):
         tree.nodes[k]["p"] = 0
@@ -109,11 +115,12 @@ def zero_csm(n, mine=True):
     return tree
 
 
-def random_c_or_p(n):
+def random_c_or_p(n: int) -> List[int]:
     return [random.randint(1, 10) for i in range(n)]
 
 
-def csm_2_nx(root: CSM):
+# Turns a CSM into a networkx DiGraph
+def csm_2_nx(root: CSM) -> DiGraph:
     nodes = root.all_nodes()
     g = nx.DiGraph()
 
