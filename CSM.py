@@ -121,32 +121,45 @@ def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
         yield (cs, ps)
 
 
+# Return all labelings with minimal area under prize-budget curve
 def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
     # Copy first so we don't alter the original
     root = deepcopy(root)
+    # Get pointers to nodes of the tree
     nodes = root.all_nodes()
     # Can compute subtrees ahead of time, as they are lists of pointer to nodes
     # The nodes get re-labeled every time in the following loop
     subtrees = all_subtrees(root)
 
-    prize_budget_curve: List[List[int]] = []
     labelings: List[Tuple[List[int], List[int]]] = []
+    # List of prize-budget curves for each labeling
+    prize_budget_curves: List[List[int]] = []
 
+    # Loop over labelings from all_labelings
+    # TODO: we can replace all_labelings with a cleverer version
     for labeling in all_labelings(root, costs, prizes):
+        # Apply prize and cost labels to root, via nodes
         apply_labeling(nodes, labeling[0], labeling[1])
+        # Store a reference to this labeling
         labelings.append(labeling)
-        prize_budget_curve.append(root.max_prize_per_budget(subtrees))
+        # Compute the prize-budget curve for this labeling
+        prize_budget_curves.append(root.max_prize_per_budget(subtrees))
 
-    areas = [sum(prizes) for prizes in prize_budget_curve]
+    # Sum prizes at each budget to get area under the curve
+    areas = [sum(prizes) for prizes in prize_budget_curves]
+    # min_area is the "optimal" value
     min_area = min(areas)
-    idxs = [i for i, x in enumerate(areas) if x == min_area]
+    # Find which labelings are optimal
+    optimal_idxs = [i for i, x in enumerate(areas) if x == min_area]
+    unique_optimal_labelings = list({labelings[i] for i in optimal_idxs})
 
-    unique_labelings = list({labelings[i] for i in idxs})
-    graphs = [deepcopy(root) for i in unique_labelings]
-
+    # Construct a labeled graph for each optimal labeling and return
+    graphs = [deepcopy(root) for i in unique_optimal_labelings]
     for i in range(len(graphs)):
         apply_labeling(
-            graphs[i].all_nodes(), unique_labelings[i][0], unique_labelings[i][1]
+            graphs[i].all_nodes(),
+            unique_optimal_labelings[i][0],
+            unique_optimal_labelings[i][1],
         )
     return graphs
 
