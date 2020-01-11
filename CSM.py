@@ -117,15 +117,14 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
 # Get all possible (size n-1) cost and prize labelings of the (size n) input tree
 # Given that they are processed one at a time, we don't need to copy
 def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
-    nodes = root.all_nodes()
     for cs, ps in product(permutations(costs), permutations(prizes)):
-        apply_labeling(nodes, cs, ps)
         yield (cs, ps)
 
 
 def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
     # Copy first so we don't alter the original
     root = deepcopy(root)
+    nodes = root.all_nodes()
     # Can compute subtrees ahead of time, as they are lists of pointer to nodes
     # The nodes get re-labeled every time in the following loop
     subtrees = all_subtrees(root)
@@ -134,6 +133,7 @@ def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
     labelings: List[Tuple[List[int], List[int]]] = []
 
     for labeling in all_labelings(root, costs, prizes):
+        apply_labeling(nodes, labeling[0], labeling[1])
         labelings.append(labeling)
         prize_budget_curve.append(root.max_prize_per_budget(subtrees))
 
@@ -144,12 +144,10 @@ def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
     unique_labelings = list({labelings[i] for i in idxs})
     graphs = [deepcopy(root) for i in unique_labelings]
 
-    [
+    for i in range(len(graphs)):
         apply_labeling(
             graphs[i].all_nodes(), unique_labelings[i][0], unique_labelings[i][1]
         )
-        for i in range(len(graphs))
-    ]
     return graphs
 
 
