@@ -4,13 +4,26 @@ from copy import deepcopy
 
 from lib import pairwise
 
+# For typing
+from networkx.classes.digraph import DiGraph
+
 
 class CSM:
-    def __init__(self, prize=0, cost=0, nx_tree=None, nx_node=0):
+
+    # Optional nx_tree argument to build a CSM from a networkx DiGraph
+    # Adds children recursively; nx_curr_node is the index of the current node
+    # within the DiGraph object
+    def __init__(
+        self,
+        prize: int = 0,
+        cost: int = 0,
+        nx_tree: DiGraph = None,
+        nx_curr_node: int = 0,
+    ):
         # Prize for taking this node
-        self.prize = prize
+        self.prize: int = prize
         # Cost to take this node
-        self.cost = cost
+        self.cost: int = cost
         self.children: List["CSM"] = []
 
         # If given a networkx digraph, import children from there
@@ -19,12 +32,14 @@ class CSM:
         if nx_tree is not None:
             self.children = [
                 CSM(
+                    # Get the prize from the child vertex
                     prize=nx_tree.nodes[child].get("p"),
-                    cost=nx_tree[nx_node][child].get("c"),
+                    # Get the cost from the edge between this and child
+                    cost=nx_tree[nx_curr_node][child].get("c"),
                     nx_tree=nx_tree,
-                    nx_node=child,
+                    nx_curr_node=child,
                 )
-                for child in nx_tree[nx_node]
+                for child in nx_tree[nx_curr_node]
             ]
 
     # Get all nodes of the tree
