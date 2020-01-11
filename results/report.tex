@@ -1,0 +1,171 @@
+\documentclass[a4paper]{amsproc}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+%%\usepackage[margin=.7in]{geometry}
+%%\usepackage[hyphens]{url} \urlstyle{same}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage[labelsep=none]{caption}
+
+%%\setlength{\textwidth}{28cc} \setlength{\textheight}{42cc}
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+\newtheoremstyle{named}{}{}{\itshape}{}{\bfseries}{.}{.5em}{\thmnote{#3 }#1}
+\theoremstyle{named}
+\newtheorem*{namedtheorem}{Theorem}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\newtheorem{corollary}{Corollary}
+%%\setlength{\parindent}{0pt}
+
+\newcommand{\RR} {\color{red} R}
+\newcommand{\BB} {\color{blue} B}
+\newcommand{\GG} {\color{green} G}
+\newcommand{\YY} {\color{yellow} Y}
+\newcommand{\N} {\mathbb{N}}
+\newcommand{\Q} {\mathbb{Q}}
+
+\title{Statistically optimal configurations for cyber-security models}
+\author[Price]{Zachary Price}
+\thanks{Department of Mathematics, George Mason University. Advised by Dr. Geir Agnarsson. Supported by the GMU Mathematics Industrial Immersion Program, sponsored by GMU Provost PhD award}
+\email{zprice3@masonlive.gmu.edu}
+\date{\today}
+
+\begin{document}
+
+
+\tikzstyle{vertex} = [circle,draw,fill=white!20]
+
+\vspace{18mm} \setcounter{page}{1} \thispagestyle{empty}
+
+\begin{abstract}
+  A cyber-security model is an ordered three-tuple $M = (T, C, P)$ where $T$ is a tree and $C$ and $P$ are multisets of costs and prizes, respectively, with cardinality $|T|-1$.
+  Building off of previous work, we formulate a notion of statistical optimality for given $(T, C, P)$ and explore computationally what such configurations would look like.
+\end{abstract}
+
+\maketitle
+
+\section{Background}
+
+The study of abstract cyber-security models has been pioneered in previous papers \cite{agk1} and \cite{agk2}.
+Here we state a few important definitions and results.
+
+\begin{definition}
+A \emph{cyber-security model} (CSM) $M$ is given by a three-tuple $M= (T, C, P)$, where $T$ is a directed tree rooted at $r$ having $n\in\N$ non-root vertices, $C$ is a multiset of penetration costs $c_1,\ldots,c_n\in\Q_+$, and $P$ is a multiset of target-acquisition-values (prizes for short) $p_1,\ldots,p_n\in\Q_+$.
+\end{definition}
+
+\begin{definition}
+A \emph{security system} (SS) with respect to a cyber-security model $M=(T,C,P)$ is given by two bijections $c:E(T)\rightarrow C$ and $p:V(T)\setminus\{r\}\rightarrow P$.
+We denote the security system by $(T,c,p)$.
+A \emph{system attack} (SA) in a security system $(T,c,p)$ is given by a subtree $\tau$ of $T$ that contains the root $r$.
+
+The \emph{cost} of a system attack $\tau$ with respect to $(T,c,p)$ is defined by
+$$cst(\tau,c,p)=\sum_{e\in E(\tau)}c(e)$$
+
+The \emph{prize} of a system attack $\tau$ with respect to $(T,c,p)$ is defined by
+$$pr(\tau,c,p)=\sum_{u\in V(\tau)} p(u)$$
+
+For a given \emph{budget} $B\in\Q_+$, the maximum prize $pr^*(B,c,p)$ w.r.t. $B$ is
+$$pr^*(B,c,p) = \max\{pr(\tau,c,p) : cst(\tau,c,p)\leq B\}$$
+\end{definition}
+
+\begin{definition} Let $M=(T,C,P)$ be a given CSM. For a budget $B\in\Q_+$, a SS $(T,c,p)$ is \emph{optimal w.r.t. $B$} if there is no other SS $(T,c',p')$ for $M$ such that $pr^*(B,c',p')<pr^*(B,c,p)$. $(T,c,p)$ is called \emph{optimal} if it is optimal w.r.t. any budget $B\in\Q_+$.
+\end{definition}
+
+In \cite{agk2}, various facts are proved about optimal security systems and certain simplified models of CSMs.
+In particular, a classification theorem is proved showing that only certain classes of trees always admit an optimal SS.
+
+\section{Methods}
+
+First, we generalize the previous definition of \emph{optimal}.
+We will be dealing only with budgets $B\in\N_+$ for simplicity.
+
+\begin{definition}Let $M=(T,C,P)$ be a given CSM, with a particular SS $(T,c,p)$.
+  The \emph{payoff sum} is
+  $$ps(T,c,p) = \sum_{B=1}^{B_{\max}} pr^*(B,c,p)$$
+  where $B_{\max}$ is the budget required to obtain all prizes in $P$.
+\end{definition}
+
+The payoff sum can be conceptualized as the area under the \emph{prize-budget curve}, which relates each budget to the maximum prize obtainable for that budget in a given SS.
+This allows us to compare the performance, on average, of different configurations:
+one SS may be superior to another SS if it gives lower prizes at more budgets.
+
+\begin{definition}Let $M=(T,C,P)$ be a given CSM. A SS $(T,c,p)$ is \emph{statistically optimal} if $ps(T,c,p)\leq ps(T,c',p')$ for any other SS $(T,c',p')$.
+\end{definition}
+
+\begin{corollary}
+  If $(T,c,p)$ is optimal for $M$, then it is statistically optimal.
+\end{corollary}
+\begin{proof}
+  For any other SS $(T,c',p')$, $pr^*(B,c,p) \leq pr^*(B,c',p')$ for every budget $B$.
+  Thus, $\sum_{B=1}^{B_{\max}} pr^*(B,c,p) \leq \sum_{B=1}^{B_{\max}} pr^*(B,c',p')$.
+\end{proof}
+
+We know from \cite{agk2} that not all trees have optimal configurations; in fact, almost all sufficiently large trees have no optimal SS.
+Every tree has a statistically optimal SS, however.
+Thus, from the corollary, statistical optimality is a generalization of true optimality for security systems.
+
+
+\section{Results}
+
+The goal is to find an efficient procedure that takes a CSM and gives a labeling that is statistically optimal.
+This would be a significant advancement in the study of CSMs from \cite{agk2}: for any given network, one could quickly decide how best to lay out layered-security defenses.
+
+Given a rooted tree $T$ and cost/prize sets $C,P$, we used computational methods to search for all $c,p$ that give statistically optimal security systems.
+We try each labeling $C\rightarrow E(T)$, $P\rightarrow V(T)\setminus\{r\}$, checking every subtree of $T$ for optimal tree attacks at each budget, and then compute the payoff sum.
+The output is $c,p$ from a statistically optimal SS.
+A Python implementation of this procedure can be found on Github at \url{https://github.com/zaprice/csm-py}
+
+This gives results for small enough trees ($|V|<7$) but could be scaled up with clever branch pruning and more efficient programming.
+Our results show that statistically optimal security systems are \emph{not} unique.
+A given $(T, C, P)$ may have multiple, fairly different configurations with the same payoff sum; different security systems will over- or under-perform each other at certain budgets, but these differences cancel out in aggregate.
+
+Some examples of the output follow.
+The root is labeled $0$, while the other vertices are labeled with their prizes.
+Edges are labeled with their respective costs.
+Figures 1 and 2 show two different statistically optimal security systems for the same tree.
+
+\begin{figure}[H]
+\includegraphics[scale=0.75]{all_best_2_5.png}
+\caption{}
+\label{fig:M0}
+\end{figure}x
+
+\begin{figure}[H]
+\includegraphics[scale=0.75]{all_best_2_6.png}
+\caption{}
+\label{fig:M1}
+\end{figure}
+
+\begin{figure}[H]
+\includegraphics[scale=0.75]{7_tree_7.png}
+\caption{}
+\label{fig:M2}
+\end{figure}
+
+
+
+
+\section{Future Work}
+
+We hope to use these concrete examples to generate a conjecture about a labeling algorithm, after which we will try to prove that it produces only statistically optimal labelings.
+The code used to generate statistically optimal configurations could also be used to explore other generalizations of the CSM paradigm, including non-linear prize sets.
+
+\begin{thebibliography}{9}
+
+\bibitem{agk1}
+  Geir Agnarsson, Raymond Greenlaw, Sanpawat Kantabutra.
+  The Complexity of Cyber Attacks in a New Layered-Security Model and the Maximum-Weight, Rooted-Subtree Problem,
+  \emph{Cybernetica}, to appear.
+
+\bibitem{agk2}
+  Geir Agnarsson, Raymond Greenlaw, Sanpawat Kantabutra.
+  The structure and topology of rooted weighted trees modeling layered cyber-security systems.
+
+\end{thebibliography}
+
+\end{document}
