@@ -6,7 +6,7 @@ import networkx as nx
 from lib import pairwise
 
 # For typing
-from typing import List, Tuple
+from typing import List, Tuple, Iterator
 from networkx.classes.digraph import DiGraph
 
 
@@ -165,7 +165,9 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
 
 # Get all possible (size n-1) cost and prize labelings of the (size n) input tree
 # Given that they are processed one at a time, we don't need to copy
-def all_labelings(root: CSM, costs: List[int], prizes: List[int]):
+def all_labelings(
+    root: CSM, costs: List[int], prizes: List[int]
+) -> Iterator[Tuple[List[int], List[int]]]:
     # Use multiset permutations to account for possible duplicates in costs/prizes
     for cs, ps in product(m_perms(costs), m_perms(prizes)):
         yield (cs, ps)
@@ -208,16 +210,13 @@ def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
     # min_area is the "optimal" value
     min_area = min(areas)
     # Find which labelings are optimal
-    optimal_idxs = [i for i, x in enumerate(areas) if x == min_area]
-    unique_optimal_labelings = list({labelings[i] for i in optimal_idxs})
+    optimal_labelings = [labelings[i] for i, x in enumerate(areas) if x == min_area]
 
     # Construct a labeled graph for each optimal labeling and return
-    graphs = [deepcopy(root) for i in unique_optimal_labelings]
+    graphs = [deepcopy(root) for i in optimal_labelings]
     for i in range(len(graphs)):
         apply_labeling(
-            graphs[i].all_nodes(),
-            unique_optimal_labelings[i][0],
-            unique_optimal_labelings[i][1],
+            graphs[i].all_nodes(), optimal_labelings[i][0], optimal_labelings[i][1]
         )
 
     # Check for isomorphisms in optimal labelings
