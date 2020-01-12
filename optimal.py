@@ -69,7 +69,8 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
     # Faster to sort in-place
     cost_prize_sort = list(zip(costs, prizes))
     cost_prize_sort.sort(key=lambda pair: pair[0])
-    unique_costs = sorted(set(costs))
+    unique_costs = list(set(costs))
+    unique_costs.sort()
 
     # List will be of length max_cost, and will contain the
     # largest prize attainable at that cost

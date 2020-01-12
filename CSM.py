@@ -88,9 +88,8 @@ class CSM:
             return node_rep + back
         else:
             # Sort forms from children
-            child_forms = sorted(
-                [child.canonical_form() for child in self.children], reverse=True
-            )
+            child_forms = [child.canonical_form() for child in self.children]
+            child_forms.sort(reverse=True)
             return node_rep + "".join(child_forms) + back
 
     # Faster is_iso based on the canonical form
