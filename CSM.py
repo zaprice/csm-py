@@ -86,11 +86,33 @@ class CSM:
             this_tree, that_tree, node_match=prize_eq, edge_match=cost_eq
         )
 
+    # Returns this tree's depth-first canonical form
+    # From Chi, Yang, Muntz (2004)
+    def canonical_form(self) -> str:
+        # Backtracking (end-of-branch) char
+        back = "$"
+        # Representation of this node
+        node_rep = f"({self.cost},{self.prize})"
+
+        # leaf
+        if not self.children:
+            return node_rep + back
+        else:
+            # Sort forms from children
+            child_forms = sorted(
+                [child.canonical_form() for child in self.children], reverse=True
+            )
+            return node_rep + "".join(child_forms) + back
+
+    # Faster is_iso based on the canonical form
+    def fast_is_iso(self, target: "CSM") -> bool:
+        return self.canonical_form() == target.canonical_form()
+
 
 # Get all subtrees of the rooted tree "root"
 def all_subtrees(root: CSM) -> List[List[CSM]]:
     # leaf
-    if len(root.children) == 0:
+    if not root.children:
         return [[root]]
     else:
         # All subtrees from all children

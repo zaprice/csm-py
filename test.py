@@ -88,15 +88,20 @@ class TestCSM(unittest.TestCase):
             self.assertEqual(n_labelings, factorial(n - 1) ** 2)
 
     def test_isomorphism(self):
+        # Test is_iso and fast_is_iso
         for n in range(2, 10):
             c = CSM(nx_tree=random_csm(n))
             # c iso to itself, and to a copy of itself
             self.assertTrue(c.is_iso(c))
             self.assertTrue(c.is_iso(deepcopy(c)))
+            self.assertTrue(c.fast_is_iso(c))
+            self.assertTrue(c.fast_is_iso(deepcopy(c)))
             # Not iso if you change a vertex or edge label
             d = deepcopy(c)
             d.children[0].prize += 1
             self.assertFalse(c.is_iso(d))
+            self.assertFalse(c.fast_is_iso(d))
             d = deepcopy(c)
             d.children[0].cost += 1
             self.assertFalse(c.is_iso(d))
+            self.assertFalse(c.fast_is_iso(d))
