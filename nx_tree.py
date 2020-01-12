@@ -22,7 +22,7 @@ def draw(g):
 
 # Convert CSM back to networkx so we can draw it
 def draw_csm(root: CSM):
-    g = csm_2_nx(root)
+    g = root.csm_2_nx()
     node_labels = dict(
         zip(range(len(root.all_nodes())), [node.prize for node in root.all_nodes()])
     )
@@ -117,20 +117,3 @@ def zero_csm(n: int, mine=True) -> DiGraph:
 
 def random_c_or_p(n: int) -> List[int]:
     return [random.randint(1, 10) for i in range(n)]
-
-
-# Turns a CSM into a networkx DiGraph
-def csm_2_nx(root: CSM) -> DiGraph:
-    nodes = root.all_nodes()
-    g = nx.DiGraph()
-
-    # Add nodes with prizes
-    for n in range(len(nodes)):
-        g.add_node(n)
-        g.nodes[n]["p"] = nodes[n].prize
-        # Add edges
-        for child in nodes[n].children:
-            child_idx = nodes.index(child)
-            g.add_edge(n, child_idx)
-            g[n][child_idx]["c"] = child.cost
-    return g

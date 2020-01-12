@@ -1,6 +1,7 @@
 import unittest
 from functools import reduce
 from math import factorial
+from copy import deepcopy
 
 from CSM import CSM, all_subtrees, subtree_costs, subtree_prizes, all_labelings
 from nx_tree import zero_csm, random_csm
@@ -51,19 +52,19 @@ class TestCSM(unittest.TestCase):
             for pair in zip(tree[tree_node], c.children)
         ]
 
-    def testInitZero(self):
+    def test_init_zero(self):
         for n in range(1, 50):
             tree = zero_csm(n, mine=False)
             self.num_children(tree, 0, CSM(nx_tree=tree))
 
-    def testInitRandom(self):
+    def test_init_random(self):
         for n in range(1, 50):
             tree = random_csm(n, mine=False)
             self.num_children(tree, 0, CSM(nx_tree=tree))
             self.check_costs(tree, 0, None, CSM(nx_tree=tree))
             self.check_prizes(tree, 0, CSM(nx_tree=tree))
 
-    def testMaxPrize(self):
+    def test_max_prize(self):
         for n in range(1, 30):
             c = CSM(nx_tree=random_csm(n, mine=False))
             ppb = c.max_prize_per_budget(all_subtrees(c))
@@ -77,9 +78,23 @@ class TestCSM(unittest.TestCase):
                 )
             )
 
-    def testLabelings(self):
+    def test_labelings(self):
         for n in range(1, 7):
             c = CSM(nx_tree=random_csm(n))
             # Make sure there are the expected (n-1)!^2 labelings
             n_labelings = sum(1 for l in all_labelings(c, [0] * (n - 1), [0] * (n - 1)))
             self.assertEqual(n_labelings, factorial(n - 1) ** 2)
+
+    def test_isomorphism(self):
+        for n in range(2, 10):
+            c = CSM(nx_tree=random_csm(n))
+            # c iso to itself, and to a copy of itself
+            self.assertTrue(c.is_iso(c))
+            self.assertTrue(c.is_iso(deepcopy(c)))
+            # Not iso if you change a vertex or edge label
+            d = deepcopy(c)
+            d.children[0].prize += 1
+            self.assertFalse(c.is_iso(d))
+            d = deepcopy(c)
+            d.children[0].cost += 1
+            self.assertFalse(c.is_iso(d))

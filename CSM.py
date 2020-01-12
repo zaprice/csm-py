@@ -1,10 +1,11 @@
-from typing import List, Tuple
 from itertools import product, permutations
 from copy import deepcopy
+import networkx as nx
 
 from lib import pairwise
 
 # For typing
+from typing import List, Tuple
 from networkx.classes.digraph import DiGraph
 
 
@@ -51,6 +52,38 @@ class CSM:
         costs = subtree_costs(subtrees)
         prizes = subtree_prizes(subtrees)
         return prize_per_cost(costs, prizes)
+
+    # Turns a CSM into a networkx DiGraph
+    def csm_2_nx(self) -> DiGraph:
+        nodes = self.all_nodes()
+        g = nx.DiGraph()
+
+        # Add nodes with prizes
+        for n in range(len(nodes)):
+            g.add_node(n)
+            g.nodes[n]["p"] = nodes[n].prize
+            # Add edges
+            for child in nodes[n].children:
+                child_idx = nodes.index(child)
+                g.add_edge(n, child_idx)
+                g[n][child_idx]["c"] = child.cost
+        return g
+
+    # Returns true if this CSM is iso to the input
+    def is_iso(self, target: "CSM") -> bool:
+        this_tree: DiGraph = self.csm_2_nx()
+        that_tree: DiGraph = target.csm_2_nx()
+
+        # Helper functions defining equality of costs, prizes
+        def prize_eq(this_node, that_node):
+            return this_node.get("p") == that_node.get("p")
+
+        def cost_eq(this_edge, that_edge):
+            return this_edge.get("c") == that_edge.get("c")
+
+        return nx.is_isomorphic(
+            this_tree, that_tree, node_match=prize_eq, edge_match=cost_eq
+        )
 
 
 # Get all subtrees of the rooted tree "root"
@@ -176,6 +209,8 @@ def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
             unique_optimal_labelings[i][0],
             unique_optimal_labelings[i][1],
         )
+
+    # Check for isomorphisms in optimal labelings
     return graphs
 
 
