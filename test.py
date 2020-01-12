@@ -82,7 +82,9 @@ class TestCSM(unittest.TestCase):
         for n in range(1, 7):
             c = CSM(nx_tree=random_csm(n))
             # Make sure there are the expected (n-1)!^2 labelings
-            n_labelings = sum(1 for l in all_labelings(c, [0] * (n - 1), [0] * (n - 1)))
+            n_labelings = sum(
+                1 for l in all_labelings(c, list(range(n - 1)), list(range(n - 1)))
+            )
             self.assertEqual(n_labelings, factorial(n - 1) ** 2)
 
     def test_isomorphism(self):
