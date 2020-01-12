@@ -1,4 +1,4 @@
-from itertools import product, combinations
+from itertools import product
 from sympy.utilities.iterables import multiset_permutations
 from copy import deepcopy
 import networkx as nx
@@ -6,7 +6,7 @@ import networkx as nx
 from lib import pairwise
 
 # For typing
-from typing import List, Tuple, Iterator
+from typing import List, Tuple, Iterator, Set
 from networkx.classes.digraph import DiGraph
 
 
@@ -217,15 +217,24 @@ def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
     # List of prize-budget curves for each labeling
     prize_budget_curves: List[List[int]] = []
 
+    # Set of canonical forms of labeled trees
+    # So that we don't consider identical labelings
+    # induced by an automorphism in the graph
+    unique_forms: Set[str] = set()
+
     # Loop over labelings from all_labelings
     # TODO: we can replace all_labelings with a cleverer version
     for labeling in all_labelings(root, costs, prizes):
         # Apply prize and cost labels to root, via nodes
         apply_labeling(nodes, labeling[0], labeling[1])
-        # Store a reference to this labeling
-        labelings.append(labeling)
-        # Compute the prize-budget curve for this labeling
-        prize_budget_curves.append(root.max_prize_per_budget(subtrees))
+        # Compare against isomorphism classes already checked
+        dfcf = root.canonical_form()
+        if dfcf not in unique_forms:
+            unique_forms.add(dfcf)
+            # Store a reference to this labeling
+            labelings.append(labeling)
+            # Compute the prize-budget curve for this labeling
+            prize_budget_curves.append(root.max_prize_per_budget(subtrees))
 
     # Sum prizes at each budget to get area under the curve
     areas = [sum(prizes) for prizes in prize_budget_curves]
@@ -241,12 +250,7 @@ def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
             graphs[i].all_nodes(), optimal_labelings[i][0], optimal_labelings[i][1]
         )
 
-    # Check for isomorphisms in optimal labelings
-    dupes: List[int] = []
-    for (i, j) in combinations(range(len(graphs)), 2):
-        if graphs[i].is_iso(graphs[j]):
-            dupes += [i]
-    return [graphs[i] for i in range(len(graphs)) if i not in dupes]
+    return graphs
 
 
 def apply_labeling(nodes: List[CSM], costs: List[int], prizes: List[int]) -> None:
