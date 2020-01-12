@@ -1,4 +1,4 @@
-from itertools import product, permutations
+from itertools import product, permutations, combinations
 from copy import deepcopy
 import networkx as nx
 
@@ -211,7 +211,11 @@ def best_labeling(root: CSM, costs: List[int], prizes: List[int]) -> List[CSM]:
         )
 
     # Check for isomorphisms in optimal labelings
-    return graphs
+    dupes: List[int] = []
+    for (i, j) in combinations(range(len(graphs)), 2):
+        if graphs[i].is_iso(graphs[j]):
+            dupes += [i]
+    return [graphs[i] for i in range(len(graphs)) if i not in dupes]
 
 
 def apply_labeling(nodes: List[CSM], costs: List[int], prizes: List[int]) -> None:
