@@ -176,7 +176,12 @@ def prize_per_cost(costs: List[int], prizes: List[int]) -> List[int]:
         # We can do this because they are sorted
         # If so, compare to max and continue
         while cost_prize_sort[i][0] <= cost:
-            curr_max_prize = max(curr_max_prize, cost_prize_sort[i][1])
+            # Comparison is faster than max()
+            curr_max_prize = (
+                curr_max_prize
+                if curr_max_prize > cost_prize_sort[i][1]
+                else cost_prize_sort[i][1]
+            )
             i += 1
         # Add prize to list for each budget between this one and the next
         max_list.extend([curr_max_prize] * (next_cost - cost))
