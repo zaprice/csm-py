@@ -3,13 +3,20 @@ from functools import reduce
 from math import factorial
 from copy import deepcopy
 
-from CSM import CSM, all_subtrees, subtree_costs, subtree_prizes, all_labelings
+from CSM import CSM
+from optimal import (
+    all_subtrees,
+    subtree_costs,
+    subtree_prizes,
+    all_labelings,
+    max_prize_per_budget,
+)
 from nx_tree import zero_csm, random_csm
 
 
 # Return the largest prize attainable at each budget
 # Simpler version for testing against CSM.max_prize_per_budget
-def max_prize_per_budget(root):
+def max_prize_per_budget_alt(root):
     subtrees = all_subtrees(root)
     costs = subtree_costs(subtrees)
     prizes = subtree_prizes(subtrees)
@@ -67,8 +74,8 @@ class TestCSM(unittest.TestCase):
     def test_max_prize(self):
         for n in range(1, 30):
             c = CSM(nx_tree=random_csm(n, mine=False))
-            ppb = c.max_prize_per_budget(all_subtrees(c))
-            self.assertEqual(ppb, max_prize_per_budget(c))
+            ppb = max_prize_per_budget(c, all_subtrees(c))
+            self.assertEqual(ppb, max_prize_per_budget_alt(c))
             # Prizes must be increasing
             self.assertTrue(
                 reduce(
