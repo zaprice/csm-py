@@ -1,4 +1,5 @@
 import networkx as nx
+from networkx.drawing.nx_agraph import graphviz_layout
 import matplotlib.pyplot as plt
 import random
 
@@ -28,7 +29,7 @@ def draw_csm(root: CSM):
     )
 
     edge_labels = dict(zip(g.edges, [g[edge[0]][edge[1]]["c"] for edge in g.edges]))
-    layout = nx.shell_layout(g)
+    layout = graphviz_layout(g, prog="dot")
     nx.draw(g, pos=layout, labels=node_labels, edge_labels=edge_labels)
     nx.draw_networkx_edge_labels(g, layout, edge_labels=edge_labels)
 
