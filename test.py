@@ -4,13 +4,8 @@ from math import factorial
 from copy import deepcopy
 
 from CSM import CSM
-from optimal import (
-    all_subtrees,
-    subtree_costs,
-    subtree_prizes,
-    all_labelings,
-    max_prize_per_budget,
-)
+from optimal import all_subtrees, subtree_costs, subtree_prizes, max_prize_per_budget
+from labeler import all_labelings
 from nx_tree import zero_csm, random_csm
 
 
